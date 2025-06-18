@@ -14,7 +14,7 @@ const router = express.Router();
 
 
 router.get("/register", (req, res) => {
-    res.sendFile(path.join(__dirname, "../forentend/registration/sign-up.html"));
+    res.sendFile(path.join(__dirname, "..","..", "forentend", "registration", "sign-up.html"));
 });
 
 

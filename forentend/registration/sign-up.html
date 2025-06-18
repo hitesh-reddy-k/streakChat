@@ -13,6 +13,101 @@
             box-sizing: border-box;
         }
 
+
+          .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 15, 35, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            position: relative;
+        }
+
+        .loading-spinner .spinner-circle {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 4px solid transparent;
+            border-radius: 50%;
+            animation: spinnerRotate 1.5s linear infinite;
+            border-top-color: var(--primary);
+            border-bottom-color: var(--accent);
+        }
+
+        .loading-spinner .spinner-inner {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            right: 12px;
+            bottom: 12px;
+            border: 4px solid transparent;
+            border-radius: 50%;
+            animation: spinnerRotateReverse 1s linear infinite;
+            border-left-color: var(--secondary);
+            border-right-color: var(--primary);
+        }
+
+        .loading-text {
+            color: var(--text-primary);
+            margin-top: 20px;
+            font-weight: 600;
+            text-align: center;
+            font-size: 18px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 3s ease infinite;
+        }
+
+        .btn-loading {
+            position: relative;
+            color: transparent !important;
+            pointer-events: none;
+        }
+
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spinnerRotate 0.8s linear infinite;
+        }
+
+        @keyframes spinnerRotate {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes spinnerRotateReverse {
+            to { transform: rotate(-360deg); }
+        }
+
+
         :root {
             --primary: #667eea;
             --secondary: #764ba2;
@@ -709,6 +804,17 @@
     </style>
 </head>
 <body>
+
+     <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner">
+                <div class="spinner-circle"></div>
+                <div class="spinner-inner"></div>
+            </div>
+            <div class="loading-text" id="loadingText">Securing your connection</div>
+        </div>
+    </div>
+
     <!-- Floating Particles -->
     <div class="particles" id="particles"></div>
 
@@ -932,6 +1038,230 @@
         // API Configuration
         const API_BASE_URL = 'http://localhost:9999/user'; // Change this to your backend URL
         
+
+         function showLoading(message = 'Securing your connection') {
+            const overlay = document.getElementById('loadingOverlay');
+            const text = document.getElementById('loadingText');
+            text.textContent = message;
+            overlay.classList.add('active');
+        }
+
+        function hideLoading() {
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.classList.remove('active');
+        }
+
+        function setButtonLoading(button, isLoading) {
+            if (isLoading) {
+                button.classList.add('btn-loading');
+                button.disabled = true;
+            } else {
+                button.classList.remove('btn-loading');
+                button.disabled = false;
+            }
+        }
+
+        // Modify your existing functions to include loading states:
+
+        async function handleRegister() {
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const registerBtn = document.querySelector('#registerForm .btn-primary');
+
+            clearMessages();
+
+            if (!username || !email || !phoneNumber || !password || !confirmPassword) {
+                showError('registerError', 'All fields are required');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showError('registerError', 'Passwords do not match');
+                return;
+            }
+
+            if (password.length < 6) {
+                showError('registerError', 'Password must be at least 6 characters long');
+                return;
+            }
+
+            try {
+                setButtonLoading(registerBtn, true);
+                showLoading('Creating your secure account...');
+
+                const response = await fetch(`${API_BASE_URL}/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username,
+                        email,
+                        phoneNumber,
+                        password,
+                        confirmPassword
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showSuccess('registerSuccess', data.message);
+                    localStorage.setItem('pendingEmail', email);
+                    
+                    setTimeout(() => {
+                        document.getElementById('registerForm').style.display = 'none';
+                        document.getElementById('otpForm').style.display = 'block';
+                        hideLoading();
+                        setButtonLoading(registerBtn, false);
+                    }, 1500);
+                } else {
+                    hideLoading();
+                    setButtonLoading(registerBtn, false);
+                    showError('registerError', data.message || 'Registration failed');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                hideLoading();
+                setButtonLoading(registerBtn, false);
+                showError('registerError', 'Network error. Please try again.');
+            }
+        }
+
+        async function handleOtpVerification() {
+            const otpInputs = document.querySelectorAll('.otp-input');
+            const otp = Array.from(otpInputs).map(input => input.value).join('');
+            const email = localStorage.getItem('pendingEmail');
+            const verifyBtn = document.querySelector('#otpForm .btn-primary');
+
+            if (otp.length !== 6) {
+                showError('registerError', 'Please enter the complete 6-digit OTP');
+                return;
+            }
+
+            if (!email) {
+                showError('registerError', 'Email not found. Please restart registration.');
+                return;
+            }
+
+            try {
+                setButtonLoading(verifyBtn, true);
+                showLoading('Verifying your email...');
+
+                const response = await fetch(`${API_BASE_URL}/verify-otp`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email,
+                        otp
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showSuccess('registerSuccess', data.message);
+                    localStorage.removeItem('pendingEmail');
+                    
+                    setTimeout(() => {
+                        showLoginPage();
+                        showSuccess('loginSuccess', 'Registration completed! Please login with your credentials.');
+                        hideLoading();
+                        setButtonLoading(verifyBtn, false);
+                    }, 2000);
+                } else {
+                    hideLoading();
+                    setButtonLoading(verifyBtn, false);
+                    showError('registerError', data.message || 'OTP verification failed');
+                }
+            } catch (error) {
+                console.error('OTP verification error:', error);
+                hideLoading();
+                setButtonLoading(verifyBtn, false);
+                showError('registerError', 'Network error. Please try again.');
+            }
+        }
+
+        async function handleLogin() {
+            const identifier = document.getElementById('loginIdentifier').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const loginBtn = document.querySelector('#loginPage .btn-primary');
+
+            clearMessages();
+
+            if (!identifier || !password) {
+                showError('loginError', 'Please enter your credentials');
+                return;
+            }
+
+            try {
+                setButtonLoading(loginBtn, true);
+                showLoading('Authenticating securely...');
+
+                const response = await fetch(`${API_BASE_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        identifier,
+                        password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showSuccess('loginSuccess', data.message);
+                    
+                    authToken = data.token;
+                    currentUser = data.user;
+                    localStorage.setItem('authToken', authToken);
+                    localStorage.setItem('userData', JSON.stringify(currentUser));
+                    
+                    setTimeout(() => {
+                        showDashboard();
+                        hideLoading();
+                        setButtonLoading(loginBtn, false);
+                    }, 1500);
+                } else {
+                    hideLoading();
+                    setButtonLoading(loginBtn, false);
+                    showError('loginError', data.message || 'Login failed');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                hideLoading();
+                setButtonLoading(loginBtn, false);
+                showError('loginError', 'Network error. Please try again.');
+            }
+        }
+
+        function handleLogout() {
+            showLoading('Securely logging out...');
+            setTimeout(() => {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userData');
+                authToken = null;
+                currentUser = null;
+                hideLoading();
+                showLoginPage();
+            }, 1000);
+        }
+
+        function startChat() {
+            showLoading('Establishing secure chat...');
+            setTimeout(() => {
+                hideLoading();
+                alert('Chat functionality coming soon! This is where you would start messaging other users.');
+            }, 1500);
+        }
+
         // Global variables
         let currentUser = null;
         let authToken = null;
