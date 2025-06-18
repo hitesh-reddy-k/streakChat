@@ -1,0 +1,51 @@
+{
+  "name": "chatting-app",
+  "version": "1.0.0",
+  "description": "this is a streak chat app where the strek can be maintned ",
+  "main": "backend/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node backend/index.js",
+    "dev": "nodemon backend/index.js"
+  },
+  "author": "hitesh reddy k",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.1672.0",
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^2.4.3",
+    "cookie": "^1.0.2",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.0",
+    "express-session": "^1.18.0",
+    "fs": "^0.0.1-security",
+    "helmet": "^7.1.0",
+    "hpp": "^0.2.3",
+    "jsonwebtoken": "^9.0.2",
+    "libsodium-wrappers": "^0.7.15",
+    "mongodb": "^6.9.0",
+    "mongoose": "^8.5.2",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.14",
+    "nodemon": "^3.1.4",
+    "parser": "^0.1.4",
+    "passport": "^0.7.0",
+    "passport-local": "^1.0.0",
+    "path": "^0.12.7",
+    "socket.io": "^4.7.5",
+    "socket.io-client": "^4.7.5",
+    "twilio": "^5.2.2",
+    "uuid": "^10.0.0",
+    "validator": "^13.12.0",
+    "vary": "^1.1.2",
+    "websocket": "^1.0.35",
+    "xss-clean": "^0.1.4"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.10"
+  }
+}

@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreakChat - Secure Messaging</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --accent: #f093fb;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --dark: #0f0f23;
+            --darker: #0a0a1a;
+            --glass: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --text-muted: rgba(255, 255, 255, 0.5);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--darker);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(118, 75, 162, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(240, 147, 251, 0.2) 0%, transparent 50%),
+                linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            z-index: -2;
+            animation: backgroundShift 20s ease-in-out infinite;
+        }
+
+        /* Floating particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: float 15s infinite linear;
+        }
+
+        .container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        .auth-wrapper {
+            display: flex;
+            background: var(--glass);
+            backdrop-filter: blur(30px);
+            border-radius: 32px;
+            box-shadow: 
+                0 32px 64px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+            max-width: 1400px;
+            width: 100%;
+            min-height: 700px;
+            position: relative;
+            animation: slideUp 1s ease-out;
+        }
+
+        .auth-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        .demo-section {
+            flex: 1.2;
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(45deg, var(--glass), rgba(255, 255, 255, 0.02));
+            position: relative;
+            overflow: hidden;
+        }
+
+        .demo-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+            animation: rotate 30s linear infinite;
+            z-index: 0;
+        }
+
+        .demo-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .demo-phone {
+            width: 320px;
+            height: 640px;
+            background: linear-gradient(145deg, #1a1a2e, #16213e);
+            border-radius: 40px;
+            padding: 24px;
+            position: relative;
+            box-shadow: 
+                0 0 60px rgba(102, 126, 234, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            animation: phoneFloat 6s ease-in-out infinite;
+            transform-style: preserve-3d;
+        }
+
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #1e1e3f 0%, #0f0f23 100%);
+            border-radius: 28px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .phone-screen::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 30% 20%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(240, 147, 251, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            margin-right: 16px;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+            position: relative;
+            animation: avatarPulse 3s ease-in-out infinite;
+        }
+
+        .avatar::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 50%;
+            z-index: -1;
+            animation: avatarGlow 2s ease-in-out infinite alternate;
+        }
+
+        .chat-info h3 {
+            color: var(--text-primary);
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .chat-info p {
+            color: var(--success);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .message {
+            margin-bottom: 16px;
+            opacity: 0;
+            transform: translateY(30px) scale(0.9);
+            animation: messageSlideIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .message.sent {
+            text-align: right;
+        }
+
+        .message-bubble {
+            display: inline-block;
+            max-width: 85%;
+            padding: 16px 20px;
+            border-radius: 24px;
+            font-size: 14px;
+            line-height: 1.5;
+            position: relative;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .message-bubble:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .message.received .message-bubble {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+            color: var(--text-primary);
+            border-bottom-left-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .message.sent .message-bubble {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-bottom-right-radius: 8px;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .encryption-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 16px 0;
+            color: var(--success);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 8px 16px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 20px;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            position: relative;
+            z-index: 1;
+        }
+
+        .lock-icon {
+            width: 14px;
+            height: 14px;
+            margin-right: 8px;
+            animation: lockPulse 2s ease-in-out infinite;
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            margin-top: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .typing-dots {
+            display: flex;
+            margin-left: 16px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-secondary);
+            margin: 0 3px;
+            animation: typingDot 1.4s infinite ease-in-out both;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        .form-section {
+            flex: 1;
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+            position: relative;
+            margin-left: 91px;
+        }
+
+        .form-container {
+            max-width: 440px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: logoFloat 4s ease-in-out infinite;
+        }
+
+        .logo h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #ffffff, #667eea, #f093fb);
+            background-size: 200% 200%;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 3s ease-in-out infinite;
+        }
+
+        .logo p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+        }
+
+        .form-group input::placeholder {
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 
+                0 0 0 4px rgba(102, 126, 234, 0.1),
+                0 8px 24px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .form-group input:focus + label {
+            color: var(--primary);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(102, 126, 234, 0.4);
+            background: linear-gradient(135deg, #7c93f0, #8b5dcf);
+        }
+
+        .btn-primary:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 255, 255, 0.1);
+        }
+
+        .page {
+            display: none;
+            animation: pageSlideIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .page.active {
+            display: flex;
+        }
+
+        .otp-container {
+            text-align: center;
+            margin-top: 24px;
+        }
+
+        .otp-container h3 {
+            color: var(--text-primary);
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .otp-container p {
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            font-size: 16px;
+        }
+
+        .otp-inputs {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 32px 0;
+        }
+
+        .otp-input {
+            width: 60px !important;
+            height: 60px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.08) !important;
+            border: 2px solid rgba(255, 255, 255, 0.1) !important;
+            transition: all 0.3s ease;
+        }
+
+        .otp-input:focus {
+            border-color: var(--primary) !important;
+            background: rgba(255, 255, 255, 0.12) !important;
+            transform: scale(1.05);
+        }
+
+        .error-message, .success-message {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+            animation: messageSlideDown 0.5s ease;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+
+        .success-message {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #86efac;
+        }
+
+        .demo-title {
+            color: var(--text-primary);
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff, var(--primary));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: titlePulse 3s ease-in-out infinite;
+        }
+
+        /* Animations */
+        @keyframes backgroundShift {
+            0%, 100% { filter: hue-rotate(0deg); }
+            50% { filter: hue-rotate(30deg); }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes phoneFloat {
+            0%, 100% { transform: translateY(0px) rotateY(0deg); }
+            50% { transform: translateY(-10px) rotateY(5deg); }
+        }
+
+        @keyframes avatarPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes avatarGlow {
+            0% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes messageSlideIn {
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes lockPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        @keyframes typingDot {
+            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+            40% { transform: scale(1.2); opacity: 1; }
+        }
+
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes pageSlideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes messageSlideDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes titlePulse {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.2); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .auth-wrapper {
+                flex-direction: column;
+                max-width: 500px;
+                min-height: auto;
+            }
+            
+            .demo-section, .form-section {
+                padding: 40px;
+            }
+            
+            .demo-phone {
+                width: 280px;
+                height: 560px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .demo-section, .form-section {
+                padding: 30px;
+            }
+            
+            .demo-phone {
+                width: 260px;
+                height: 520px;
+            }
+            
+            .logo h1 {
+                font-size: 2.5rem;
+            }
+            
+            .demo-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Custom Scrollbar */
+        .messages::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .messages::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 2px;
+        }
+
+        .messages::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--primary), var(--secondary));
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Particles -->
+    <div class="particles" id="particles"></div>
+
+    <div class="container">
+        <div class="auth-wrapper">
+            <!-- Registration Page -->
+            <div id="registerPage" class="page active">
+                <div class="demo-section">
+                    <div class="demo-content">
+                        <h2 class="demo-title">🔐 End-to-End Encryption</h2>
+                        <div class="demo-phone">
+                            <div class="phone-screen">
+                                <div class="chat-header">
+                                    <div class="avatar">A</div>
+                                    <div class="chat-info">
+                                        <h3>Alice</h3>
+                                        <p>🔒 Encrypted Chat</p>
+                                    </div>
+                                </div>
+                                <div class="messages" id="registerMessages">
+                                    <!-- Messages will be added dynamically -->
+                                </div>
+                                <div class="encryption-indicator">
+                                    <svg class="lock-icon" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"/>
+                                    </svg>
+                                    Messages are encrypted
+                                </div>
+                                <div class="typing-indicator" id="registerTyping">
+                                    <div class="avatar" style="width: 24px; height: 24px; font-size: 12px;">B</div>
+                                    <div class="typing-dots">
+                                        <div class="typing-dot"></div>
+                                        <div class="typing-dot"></div>
+                                        <div class="typing-dot"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-container">
+                        <div class="logo">
+                            <h1>StreakChat</h1>
+                            <p>Join the secure conversation</p>
+                        </div>
+
+                        <div id="registerForm">
+                            <div id="registerError" class="error-message" style="display: none;"></div>
+                            <div id="registerSuccess" class="success-message" style="display: none;"></div>
+
+                            <div class="form-group">
+                                <label for="username">Username</label>
+                                <input type="text" id="username" name="username" placeholder="Choose a unique username" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email">Email Address</label>
+                                <input type="email" id="email" name="email" placeholder="your@email.com" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="phoneNumber">Phone Number</label>
+                                <input type="tel" id="phoneNumber" name="phoneNumber" placeholder="+1 (555) 123-4567" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="password">Password</label>
+                                <input type="password" id="password" name="password" placeholder="Create a strong password" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="confirmPassword">Confirm Password</label>
+                                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" required>
+                            </div>
+
+                            <button type="button" class="btn btn-primary" onclick="handleRegister()">Create Account</button>
+                            <button type="button" class="btn btn-secondary" onclick="showLoginPage()">Already have an account? Sign in</button>
+                        </div>
+
+                        <div id="otpForm" style="display: none;">
+                            <div class="otp-container">
+                                <h3>Verify Your Email</h3>
+                                <p>Enter the 6-digit code sent to your email address</p>
+                                
+                                <div class="otp-inputs">
+                                    <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 0)">
+                                    <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 1)">
+                                    <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 2)">
+                                    <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 3)">
+                                    <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 4)">
+                                    <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 5)">
+                                </div>
+
+                                <button type="button" class="btn btn-primary" onclick="handleOtpVerification()">Verify & Complete Registration</button>
+                                <button type="button" class="btn btn-secondary" onclick="backToRegister()">Back to Registration</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Login Page -->
+            <div id="loginPage" class="page">
+                <div class="demo-section">
+                    <div class="demo-content">
+                        <h2 class="demo-title">💬 Secure Messaging</h2>
+                        <div class="demo-phone">
+                            <div class="phone-screen">
+                                <div class="chat-header">
+                                    <div class="avatar">J</div>
+                                    <div class="chat-info">
+                                        <h3>John</h3>
+                                        <p>🟢 Online</p>
+                                    </div>
+                                </div>
+                                <div class="messages" id="loginMessages">
+                                    <!-- Messages will be added dynamically -->
+                                </div>
+                                <div class="encryption-indicator">
+                                    <svg class="lock-icon" viewBox="0 0 20 20" fill="currentColor">
+                                       <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"/>
+                                    </svg>
+                                    Messages are encrypted
+                                </div>
+                                <div class="typing-indicator" id="loginTyping">
+                                    <div class="avatar" style="width: 24px; height: 24px; font-size: 12px;">M</div>
+                                    <div class="typing-dots">
+                                        <div class="typing-dot"></div>
+                                        <div class="typing-dot"></div>
+                                        <div class="typing-dot"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-container">
+                        <div class="logo">
+                            <h1>StreakChat</h1>
+                            <p>Welcome back to secure messaging</p>
+                        </div>
+
+                        <div id="loginError" class="error-message" style="display: none;"></div>
+                        <div id="loginSuccess" class="success-message" style="display: none;"></div>
+
+                        <div class="form-group">
+                            <label for="loginIdentifier">Username, Email or Phone</label>
+                            <input type="text" id="loginIdentifier" name="identifier" placeholder="Enter your username, email or phone" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="loginPassword">Password</label>
+                            <input type="password" id="loginPassword" name="password" placeholder="Enter your password" required>
+                        </div>
+
+                        <button type="button" class="btn btn-primary" onclick="handleLogin()">Sign In</button>
+                        <button type="button" class="btn btn-secondary" onclick="showRegisterPage()">Don't have an account? Sign up</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Page -->
+            <div id="dashboardPage" class="page">
+                <div class="demo-section">
+                    <div class="demo-content">
+                        <h2 class="demo-title">💬 Your Conversations</h2>
+                        <div class="demo-phone">
+                            <div class="phone-screen">
+                                <div class="chat-header">
+                                    <div class="avatar" id="userAvatar">U</div>
+                                    <div class="chat-info">
+                                        <h3 id="userName">User</h3>
+                                        <p>🟢 Online</p>
+                                    </div>
+                                </div>
+                                <div class="messages">
+                                    <div class="message received">
+                                        <div class="message-bubble">Welcome to StreakChat! Your messages are end-to-end encrypted.</div>
+                                    </div>
+                                </div>
+                                <div class="encryption-indicator">
+                                    <svg class="lock-icon" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"/>
+                                    </svg>
+                                    Your account is secured
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-container">
+                        <div class="logo">
+                            <h1>StreakChat</h1>
+                            <p>Dashboard</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Account Information</label>
+                            <div style="background: var(--glass); padding: 20px; border-radius: 12px; border: 1px solid var(--glass-border);">
+                                <p style="color: var(--text-primary); margin-bottom: 8px;"><strong>Username:</strong> <span id="dashboardUsername">-</span></p>
+                                <p style="color: var(--text-primary); margin-bottom: 8px;"><strong>Email:</strong> <span id="dashboardEmail">-</span></p>
+                                <p style="color: var(--text-primary);"><strong>Phone:</strong> <span id="dashboardPhone">-</span></p>
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn btn-primary" onclick="startChat()">Start Chatting</button>
+                        <button type="button" class="btn btn-secondary" onclick="handleLogout()">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_BASE_URL = 'http://localhost:9999/user'; // Change this to your backend URL
+        
+        // Global variables
+        let currentUser = null;
+        let authToken = null;
+
+        // Initialize particles and demo messages
+        document.addEventListener('DOMContentLoaded', function() {
+            createParticles();
+            startRegisterDemo();
+            startLoginDemo();
+            
+            // Check if user is already logged in
+            const token = localStorage.getItem('authToken');
+            const user = localStorage.getItem('userData');
+            
+            if (token && user) {
+                authToken = token;
+                currentUser = JSON.parse(user);
+                showDashboard();
+            }
+        });
+
+        // Create floating particles
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 50;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Demo message animations for register page
+        function startRegisterDemo() {
+            const messages = [
+                { type: 'received', text: 'Hey! Have you tried StreakChat?' },
+                { type: 'sent', text: 'Not yet, what makes it special?' },
+                { type: 'received', text: 'End-to-end encryption by default!' },
+                { type: 'sent', text: 'That sounds amazing! 🔒' },
+                { type: 'received', text: 'Your messages are completely private' }
+            ];
+
+            let currentIndex = 0;
+            const container = document.getElementById('registerMessages');
+            const typing = document.getElementById('registerTyping');
+
+            function addMessage() {
+                if (currentIndex >= messages.length) {
+                    setTimeout(() => {
+                        container.innerHTML = '';
+                        currentIndex = 0;
+                        addMessage();
+                    }, 3000);
+                    return;
+                }
+
+                const message = messages[currentIndex];
+                
+                // Show typing indicator
+                typing.style.opacity = '1';
+                
+                setTimeout(() => {
+                    typing.style.opacity = '0';
+                    
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `message ${message.type}`;
+                    messageDiv.style.animationDelay = (currentIndex * 0.1) + 's';
+                    messageDiv.innerHTML = `<div class="message-bubble">${message.text}</div>`;
+                    
+                    container.appendChild(messageDiv);
+                    container.scrollTop = container.scrollHeight;
+                    
+                    currentIndex++;
+                    setTimeout(addMessage, 2000);
+                }, 1500);
+            }
+
+            addMessage();
+        }
+
+        // Demo message animations for login page
+        function startLoginDemo() {
+            const messages = [
+                { type: 'sent', text: 'Ready to chat securely?' },
+                { type: 'received', text: 'Always! Love the encryption 🔐' },
+                { type: 'sent', text: 'Same here, privacy first!' },
+                { type: 'received', text: 'StreakChat makes it so easy' }
+            ];
+
+            let currentIndex = 0;
+            const container = document.getElementById('loginMessages');
+            const typing = document.getElementById('loginTyping');
+
+            function addMessage() {
+                if (currentIndex >= messages.length) {
+                    setTimeout(() => {
+                        container.innerHTML = '';
+                        currentIndex = 0;
+                        addMessage();
+                    }, 3000);
+                    return;
+                }
+
+                const message = messages[currentIndex];
+                
+                typing.style.opacity = '1';
+                
+                setTimeout(() => {
+                    typing.style.opacity = '0';
+                    
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `message ${message.type}`;
+                    messageDiv.style.animationDelay = (currentIndex * 0.1) + 's';
+                    messageDiv.innerHTML = `<div class="message-bubble">${message.text}</div>`;
+                    
+                    container.appendChild(messageDiv);
+                    container.scrollTop = container.scrollHeight;
+                    
+                    currentIndex++;
+                    setTimeout(addMessage, 2000);
+                }, 1500);
+            }
+
+            setTimeout(addMessage, 2000);
+        }
+
+        // Page navigation functions
+        function showLoginPage() {
+            document.getElementById('registerPage').classList.remove('active');
+            document.getElementById('loginPage').classList.add('active');
+            document.getElementById('dashboardPage').classList.remove('active');
+            clearMessages();
+        }
+
+        function showRegisterPage() {
+            document.getElementById('loginPage').classList.remove('active');
+            document.getElementById('registerPage').classList.add('active');
+            document.getElementById('dashboardPage').classList.remove('active');
+            clearMessages();
+        }
+
+        function showDashboard() {
+            document.getElementById('loginPage').classList.remove('active');
+            document.getElementById('registerPage').classList.remove('active');
+            document.getElementById('dashboardPage').classList.add('active');
+            
+            if (currentUser) {
+                document.getElementById('userName').textContent = currentUser.username;
+                document.getElementById('userAvatar').textContent = currentUser.username.charAt(0).toUpperCase();
+                document.getElementById('dashboardUsername').textContent = currentUser.username;
+                document.getElementById('dashboardEmail').textContent = currentUser.email;
+                document.getElementById('dashboardPhone').textContent = currentUser.phoneNumber;
+            }
+        }
+
+        function clearMessages() {
+            const errorElements = document.querySelectorAll('.error-message');
+            const successElements = document.querySelectorAll('.success-message');
+            
+            errorElements.forEach(el => {
+                el.style.display = 'none';
+                el.textContent = '';
+            });
+            
+            successElements.forEach(el => {
+                el.style.display = 'none';
+                el.textContent = '';
+            });
+        }
+
+        // OTP input handling
+        function moveToNext(current, index) {
+            if (current.value.length === 1) {
+                const nextInput = document.querySelectorAll('.otp-input')[index + 1];
+                if (nextInput) {
+                    nextInput.focus();
+                }
+            }
+            
+            if (current.value.length === 0 && index > 0) {
+                const prevInput = document.querySelectorAll('.otp-input')[index - 1];
+                if (prevInput) {
+                    prevInput.focus();
+                }
+            }
+        }
+
+        // Registration handler
+        async function handleRegister() {
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            // Clear previous messages
+            clearMessages();
+
+            // Validation
+            if (!username || !email || !phoneNumber || !password || !confirmPassword) {
+                showError('registerError', 'All fields are required');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showError('registerError', 'Passwords do not match');
+                return;
+            }
+
+            if (password.length < 6) {
+                showError('registerError', 'Password must be at least 6 characters long');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username,
+                        email,
+                        phoneNumber,
+                        password,
+                        confirmPassword
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showSuccess('registerSuccess', data.message);
+                    // Store email for OTP verification
+                    localStorage.setItem('pendingEmail', email);
+                    
+                    // Show OTP form
+                    setTimeout(() => {
+                        document.getElementById('registerForm').style.display = 'none';
+                        document.getElementById('otpForm').style.display = 'block';
+                    }, 1500);
+                } else {
+                    showError('registerError', data.message || 'Registration failed');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showError('registerError', 'Network error. Please try again.');
+            }
+        }
+
+        // OTP verification handler
+        async function handleOtpVerification() {
+            const otpInputs = document.querySelectorAll('.otp-input');
+            const otp = Array.from(otpInputs).map(input => input.value).join('');
+            const email = localStorage.getItem('pendingEmail');
+
+            if (otp.length !== 6) {
+                showError('registerError', 'Please enter the complete 6-digit OTP');
+                return;
+            }
+
+            if (!email) {
+                showError('registerError', 'Email not found. Please restart registration.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/verify-otp`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email,
+                        otp
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showSuccess('registerSuccess', data.message);
+                    localStorage.removeItem('pendingEmail');
+                    
+                    // Redirect to login page after successful verification
+                    setTimeout(() => {
+                        showLoginPage();
+                        showSuccess('loginSuccess', 'Registration completed! Please login with your credentials.');
+                    }, 2000);
+                } else {
+                    showError('registerError', data.message || 'OTP verification failed');
+                }
+            } catch (error) {
+                console.error('OTP verification error:', error);
+                showError('registerError', 'Network error. Please try again.');
+            }
+        }
+
+        // Back to register form
+        function backToRegister() {
+            document.getElementById('otpForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            
+            // Clear OTP inputs
+            document.querySelectorAll('.otp-input').forEach(input => input.value = '');
+        }
+
+        // Login handler
+        async function handleLogin() {
+            const identifier = document.getElementById('loginIdentifier').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            clearMessages();
+
+            if (!identifier || !password) {
+                showError('loginError', 'Please enter your credentials');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        identifier,
+                        password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showSuccess('loginSuccess', data.message);
+                    
+                    // Store auth data
+                    authToken = data.token;
+                    currentUser = data.user;
+                    localStorage.setItem('authToken', authToken);
+                    localStorage.setItem('userData', JSON.stringify(currentUser));
+                    
+                    // Redirect to dashboard
+                    setTimeout(() => {
+                        showDashboard();
+                    }, 1500);
+                } else {
+                    showError('loginError', data.message || 'Login failed');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('loginError', 'Network error. Please try again.');
+            }
+        }
+
+        // Logout handler
+        function handleLogout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userData');
+            authToken = null;
+            currentUser = null;
+            showLoginPage();
+        }
+
+        // Start chat function (placeholder)
+        function startChat() {
+            alert('Chat functionality coming soon! This is where you would start messaging other users.');
+        }
+
+        // Utility functions
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+
+        function showSuccess(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 3000);
+        }
+
+        // Handle Enter key presses
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const activeForm = document.querySelector('.page.active');
+                
+                if (activeForm.id === 'registerPage') {
+                    if (document.getElementById('registerForm').style.display !== 'none') {
+                        handleRegister();
+                    } else if (document.getElementById('otpForm').style.display !== 'none') {
+                        handleOtpVerification();
+                    }
+                } else if (activeForm.id === 'loginPage') {
+                    handleLogin();
+                }
+            }
+        });
+
+        // Auto-focus on first input when switching pages
+        function focusFirstInput() {
+            setTimeout(() => {
+                const activeForm = document.querySelector('.page.active');
+                const firstInput = activeForm.querySelector('input');
+                if (firstInput) {
+                    firstInput.focus();
+                }
+            }, 300);
+        }
+
+        // Add focus event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            focusFirstInput();
+        });
+    </script>
+</body>
+</html>
